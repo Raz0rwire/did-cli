@@ -11,8 +11,33 @@ Download the binary and move it into your $PATH with the following command
 
 
 ### Configuration
-Add the following line to your `.bashrc` or *.zshrc*, it will fail without it
+Add the following line to your `.bashrc` or `.zshrc`, it will fail without it
 
 	export DTT_API_KEY="{api_key}"
 
 ### Usage
+Here's a list of all currently supported features of didthistoday.com
+
+##### Help
+    did -h
+    did --help
+
+##### Get all your teams
+    did teams
+
+##### Get all your tags
+    did tags
+    
+    
+##### List your dids
+    did list
+    
+    did --page=2 list
+    did -p 2 list
+    
+    did --page=2 --count=80 list
+    did -p 2 -c 80 list    
+    
+##### Create new did
+    did -m "I just created a new did #yay"
+    did --message "I just created a new did #yay"
