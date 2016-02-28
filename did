@@ -1,0 +1,161 @@
+#!/usr/bin/env python
+
+import argparse
+import requests
+import os, sys
+
+
+def prRed(prt): return "\033[91m {}\033[00m".format(prt)
+
+
+def prGreen(prt): return "\033[92m {}\033[00m".format(prt)
+
+
+def prYellow(prt): return "\033[93m {}\033[00m".format(prt)
+
+
+def prLightPurple(prt):  return "\033[94m {}\033[00m".format(prt)
+
+
+def prPurple(prt): return "\033[95m {}\033[00m".format(prt)
+
+
+def prCyan(prt): return "\033[96m {}\033[00m".format(prt)
+
+
+def prLightGray(prt): return "\033[97m {}\033[00m".format(prt)
+
+
+def prBlack(prt): return "\033[98m {}\033[00m".format(prt)
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("type", nargs='?', metavar='type', choices=['teams', 'tags', 'list'])
+parser.add_argument('--page', '-p', metavar='int', type=int, default=1)
+parser.add_argument('--count', '-c', metavar='int', type=int, default=10)
+parser.add_argument('--message', '-m', metavar='message', default='')
+args = parser.parse_args()
+
+
+class Did:
+    def __init__(self):
+        self.base_url = 'http://dev.didthistoday.com/api/'
+
+        if os.environ.get('DTT_API_KEY'):
+            self.api_key = os.environ['DTT_API_KEY']
+        else:
+            print(prRed('DTT_API_KEY not set in environment'))
+            sys.exit(1)
+
+    ###################
+    # Utility methods #
+    ###################
+    def build_request(self, method, payload):
+        headers = {'DTT-APIKEY': self.api_key}
+
+        if payload:
+            res = requests.post(self.base_url + method, headers=headers, data=payload)
+        else:
+            res = requests.get(self.base_url + method, headers=headers)
+
+        return res.json()
+
+    def _caller(self, type):
+        method = getattr(self, type, self._not_implemented)
+        return method()
+
+    def _printer(self, response):
+        func = 'print_' + args.type
+        method = getattr(self, func, self._not_implemented)
+        return method(response['data'])
+
+    def _not_implemented(self):
+        print prPurple("Method `" + args.type + "` not implemented")
+
+    #######################
+    # Did related methods #
+    #######################
+    def did(self):
+        method = 'didthis'
+
+        payload = {
+            'did': args.message
+        }
+
+        return self.build_request(method, payload)
+
+    def print_did(self):
+        return 'did'
+
+    #######################
+    # Tag related methods #
+    #######################
+    def tags(self):
+        method = 'tags'
+        return self.build_request(method, False)
+
+    def print_tags(self, data):
+        print prGreen('Your tags')
+
+        for (item) in data:
+            print(prCyan("#" + item))
+
+    ########################
+    # List related methods #
+    ########################
+    def list(self):
+        method = 'dids'
+
+        page = args.page - 1;
+        start = page * args.count;
+
+        payload = {
+            'start': start,
+            'limit': args.count
+        }
+
+        return self.build_request(method, payload)
+
+    def print_list(self, data):
+        print prGreen('Your dids on page %d') % args.page
+
+        for (item) in data:
+            print prBlack(item['date']) + prCyan(item['did'])
+
+    ########################
+    # Team related methods #
+    ########################
+    def teams(self):
+        method = 'teams'
+        return self.build_request(method, False)
+
+    def print_teams(self, data):
+        print prGreen('Your teams')
+
+        for (item) in data:
+            print prBlack(item['expires']) + prCyan("#" + item['tag'])
+
+
+def run():
+    did = Did()
+
+    response = {}
+    if (args.type):
+        response = did._caller(args.type)
+    elif args.message:
+        response = did.did()
+    else:
+        parser.print_help()
+
+    if response:
+        if response['code'] == 200:
+            did._printer(response)
+
+        elif response['code'] == 400:
+            print prCyan(response['message'])
+        else:
+            print "Invalid credentials"
+
+
+if __name__ == "__main__":
+    run()
