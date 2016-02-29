@@ -3,6 +3,7 @@
 import argparse
 import requests
 import os, sys
+from os.path import join, expanduser
 
 
 def prRed(prt): return "\033[91m {}\033[00m".format(prt)
@@ -34,15 +35,20 @@ parser.add_argument("type", nargs='?', metavar='type', choices=['teams', 'tags',
 parser.add_argument('--page', '-p', metavar='int', type=int, default=1)
 parser.add_argument('--count', '-c', metavar='int', type=int, default=10)
 parser.add_argument('--message', '-m', metavar='message', default='')
+parser.add_argument('--env', '-e', default='prod')
+
 args = parser.parse_args()
 
 
 class Did:
-    def __init__(self):
-        self.base_url = 'http://dev.didthistoday.com/api/'
+    def __init__(self, env):
+        if env.DTT_ENV and env.DTT_ENV == 'dev':
+            self.base_url = 'http://dev.didthistoday.com/api/'
+        else:
+            self.base_url = 'http://didthistoday.com/api/'
 
-        if os.environ.get('DTT_API_KEY'):
-            self.api_key = os.environ['DTT_API_KEY']
+        if env.DTT_API_KEY:
+            self.api_key = env.DTT_API_KEY
         else:
             print(prRed('DTT_API_KEY not set in environment'))
             sys.exit(1)
@@ -106,8 +112,8 @@ class Did:
     def list(self):
         method = 'dids'
 
-        page = args.page - 1;
-        start = page * args.count;
+        page = args.page - 1
+        start = page * args.count
 
         payload = {
             'start': start,
@@ -136,8 +142,8 @@ class Did:
             print prBlack(item['expires']) + prCyan("#" + item['tag'])
 
 
-def run():
-    did = Did()
+def run(env):
+    did = Did(env)
 
     response = {}
     if (args.type):
@@ -158,4 +164,24 @@ def run():
 
 
 if __name__ == "__main__":
-    run()
+
+    try:
+        home = expanduser('~')
+
+        env = {}
+
+        f = open(home + '/.didrc', 'r')
+        f.seek(0, 0)
+
+        line = f.readline()
+        while line:
+            vals = line.split('=')
+
+            env[vals[0]] = vals[1].rstrip('\n')
+
+            line = f.readline()
+
+        print env
+        run(env)
+    except IOError:
+        print prRed("Make sure you have a readable ~/.didrc with an API key in it")
