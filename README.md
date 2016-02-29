@@ -45,5 +45,7 @@ Here's a list of all currently supported features of didthistoday.com, it's curr
     
 
 ### Contributors
+@Raz0rwire (https://github.com/Raz0rwire)
+@PurpleObject (https://github.com/PurpleObject)
     
     
