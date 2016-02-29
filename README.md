@@ -11,9 +11,10 @@ Download the binary and move it into your $PATH with the following command
 
 
 ### Configuration
-Add the following line to your `.bashrc` or `.zshrc`, it will fail without it
+Create a `~/.didrc` in your home folder containing at least an API Key and optionally an env variable
 
-	export DTT_API_KEY="{api_key}"
+	DTT_API_KEY={api_key}
+    DTT_ENV={dev or prod}
 
 ### Usage
 Here's a list of all currently supported features of didthistoday.com, it's currently full featured check the API documentation here: http://didthistoday.com/api/doc/
