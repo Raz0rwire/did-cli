@@ -2,8 +2,8 @@
 
 import argparse
 import requests
-import os, sys
-from os.path import join, expanduser
+from sys import exit
+from os.path import isfile, expanduser
 
 
 def prRed(prt): return "\033[91m {}\033[00m".format(prt)
@@ -42,16 +42,16 @@ args = parser.parse_args()
 
 class Did:
     def __init__(self, env):
-        if env.DTT_ENV and env.DTT_ENV == 'dev':
+        if env['DTT_ENV'] and env['DTT_ENV'] == 'dev':
             self.base_url = 'http://dev.didthistoday.com/api/'
         else:
             self.base_url = 'http://didthistoday.com/api/'
 
-        if env.DTT_API_KEY:
-            self.api_key = env.DTT_API_KEY
+        if env['DTT_API_KEY']:
+            self.api_key = env['DTT_API_KEY']
         else:
             print(prRed('DTT_API_KEY not set in environment'))
-            sys.exit(1)
+            exit(1)
 
     ###################
     # Utility methods #
@@ -165,11 +165,10 @@ def run(env):
 
 if __name__ == "__main__":
 
-    try:
-        home = expanduser('~')
+    home = expanduser('~')
 
-        env = {}
-
+    env = {}
+    if isfile(home + '/.didrc'):
         f = open(home + '/.didrc', 'r')
         f.seek(0, 0)
 
@@ -181,7 +180,6 @@ if __name__ == "__main__":
 
             line = f.readline()
 
-        print env
         run(env)
-    except IOError:
+    else:
         print prRed("Make sure you have a readable ~/.didrc with an API key in it")
